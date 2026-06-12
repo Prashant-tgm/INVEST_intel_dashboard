@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# models/*.pkl
+# data/processed/*.csv
+# data/processed/*.parquet
+# reports/figures/*.png
+# reports/figures/*.jpg
+# reports/figures/*.svg
+logs/
+.env
+ps.txt
+
+!models/.gitkeep
+!data/processed/.gitkeep
