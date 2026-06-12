@@ -8,6 +8,8 @@ __pycache__/
 models/*.joblib
 data/processed/*.csv
 data/processed/*.parquet
+nifty50_stocks.csv
+models/stock_direction_model.joblib
 # reports/figures/*.png
 # reports/figures/*.jpg
 # reports/figures/*.svg
