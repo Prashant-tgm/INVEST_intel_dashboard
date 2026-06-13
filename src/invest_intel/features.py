@@ -27,6 +27,9 @@ def add_technical_features(
     df["intraday_range"] = (df["high"] - df["low"]) / df["open"]
     df["close_to_vwap"] = (df["close"] - df["vwap"]) / df["vwap"]
     df["gap_return"] = (df["open"] - df["prev_close"]) / df["prev_close"]
+    df["open_to_close_return"] = (df["close"] - df["open"]) / df["open"]
+    df["high_low_spread"] = (df["high"] - df["low"]) / df["close"]
+    df["close_position_in_range"] = (df["close"] - df["low"]) / (df["high"] - df["low"]).replace(0, np.nan)
 
     for window in (5, 20, 50, 100):
         df[f"ma_{window}"] = group["close"].transform(lambda s: s.rolling(window).mean())
@@ -35,11 +38,18 @@ def add_technical_features(
     for window in (10, 20, 60):
         df[f"volatility_{window}"] = group["daily_return"].transform(lambda s: s.rolling(window).std())
         df[f"momentum_{window}"] = group["close"].pct_change(window, fill_method=None)
+        df[f"return_mean_{window}"] = group["daily_return"].transform(lambda s: s.rolling(window).mean())
+        df[f"return_to_volatility_{window}"] = df[f"return_mean_{window}"] / df[f"volatility_{window}"].replace(0, np.nan)
+
+    for lag in (1, 2, 3, 5, 10):
+        df[f"return_lag_{lag}"] = group["daily_return"].shift(lag)
+        df[f"volume_change_lag_{lag}"] = group["volume"].pct_change(lag, fill_method=None)
 
     df["ema_12"] = group["close"].transform(lambda s: s.ewm(span=12, adjust=False).mean())
     df["ema_26"] = group["close"].transform(lambda s: s.ewm(span=26, adjust=False).mean())
     df["macd"] = df["ema_12"] - df["ema_26"]
     df["macd_signal"] = group["macd"].transform(lambda s: s.ewm(span=9, adjust=False).mean())
+    df["macd_histogram"] = df["macd"] - df["macd_signal"]
     df["rsi_14"] = group["close"].transform(_rsi)
 
     rolling_mean_20 = group["close"].transform(lambda s: s.rolling(20).mean())
@@ -51,6 +61,15 @@ def add_technical_features(
     df["volume_zscore_20"] = group["volume"].transform(
         lambda s: (s - s.rolling(20).mean()) / s.rolling(20).std()
     )
+    df["turnover_zscore_20"] = group["turnover"].transform(
+        lambda s: (s - s.rolling(20).mean()) / s.rolling(20).std()
+    )
+    df["delivery_change_20"] = group["deliverable_pct"].pct_change(20, fill_method=None)
+
+    df["market_return_1d"] = df.groupby("date")["daily_return"].transform("mean")
+    df["market_volatility_20"] = df.groupby("date")["volatility_20"].transform("mean")
+    df["excess_return_1d"] = df["daily_return"] - df["market_return_1d"]
+    df["relative_strength_20"] = df["momentum_20"] - df.groupby("date")["momentum_20"].transform("mean")
 
     for horizon in horizons:
         future_col = f"future_return_{horizon}d"

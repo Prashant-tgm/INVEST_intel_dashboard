@@ -14,7 +14,7 @@ sys.path.append(str(ROOT / "src"))
 
 from invest_intel.data import attach_metadata, build_returns_matrix, load_prices, save_processed
 from invest_intel.features import add_technical_features, drop_modeling_na, modeling_feature_columns
-from invest_intel.modeling import train_direction_model, train_return_models
+from invest_intel.modeling import train_direction_models, train_return_models
 from invest_intel.portfolio import construct_profile_portfolio
 from invest_intel.reporting import build_investment_report, build_markdown_summary, save_investment_report
 from invest_intel.risk import risk_summary
@@ -55,17 +55,26 @@ def main() -> None:
 
     print("Training next-day direction model...")
     direction_df = drop_modeling_na(features, "target_direction_1d", feature_cols)
-    direction_result = train_direction_model(
+    direction_results = train_direction_models(
         direction_df,
         feature_cols,
         target_col="target_direction_1d",
         test_start_date="2019-01-01",
     )
+    direction_metrics = pd.DataFrame([{"model": result.name, **result.metrics} for result in direction_results])
+    direction_result = max(
+        direction_results,
+        key=lambda result: (
+            result.metrics["directional_accuracy"],
+            result.metrics["balanced_accuracy"],
+        ),
+    )
     joblib.dump(
         {"model": direction_result.estimator, "feature_cols": feature_cols, "target": "target_direction_1d"},
         models_dir / "stock_direction_1d_model.joblib",
     )
-    print(direction_result.metrics)
+    direction_metrics.to_csv(reports_dir / "direction_model_metrics_1d.csv", index=False)
+    print(direction_metrics.to_string(index=False))
 
     print("Building portfolio, risk, signals, and reports...")
     recent_prices = prices[prices["date"] >= "2015-01-01"]
