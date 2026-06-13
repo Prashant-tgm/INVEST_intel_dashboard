@@ -1,6 +1,6 @@
 # Data-Driven Investment Intelligence Using NIFTY-50 Market Data
 
-This repository implements a starter investment intelligence platform for the NIFTY-50 challenge described in `PS.txt`.
+This repository implements a starter investment intelligence platform for the NIFTY-50 dataset.
 
 The focus is decision support, not only price prediction:
 
@@ -12,6 +12,8 @@ The focus is decision support, not only price prediction:
 - Explainability, anomaly detection, candlestick history, and investment impact reports.
 
 Because the supplied dataset contains daily historical candles, "24 hrs" is treated as the next available trading day after the latest row in the dataset. The generated signals are educational decision-support indicators, not financial advice.
+
+application Deployed on streamlit : https://investinteldashboard-9ceyjwrfaomrwuccqvy5zp.streamlit.app/
 
 ## Project Structure
 
